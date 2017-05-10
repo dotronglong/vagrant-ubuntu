@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "centos/7"
+  config.vm.box = "ubuntu/trusty64"
   config.vm.provision "shell", inline: <<-SHELL
     cp -pr /vagrant/provision.sh /usr/bin/provision
   SHELL
@@ -13,14 +13,12 @@ Vagrant.configure("2") do |config|
     lamp.vm.provision "shell", inline: <<-SHELL
       provision setup
       provision install_nfsd
-      provision install_httpd
+      # provision install_httpd
       provision install_mariadb
-      provision install_php
-      provision install_phpmyadmin
-      provision install_composer
-      provision install_node
-      provision install_bower
-      provision install_gulp
+      # provision install_php
+      # provision install_phpmyadmin
+      # provision install_composer
+      # provision install_node
       provision info "DONE!!!"
     SHELL
   end

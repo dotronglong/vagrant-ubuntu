@@ -7,7 +7,7 @@ warn() { echo >&2 -e ":: \033[00;31m$*\033[00m"; }
 die() { echo >&2 -e ":: \033[00;31m$*\033[00m"; exit 1; }
 null() { echo >/dev/null; }
 
-function setup() {
+setup() {
   # Setup Google DNS
   echo "nameserver 8.8.8.8" > /etc/resolv.conf
   echo "nameserver 8.8.4.4" >> /etc/resolv.conf
@@ -17,23 +17,19 @@ function setup() {
 
   # Disable SELinux
   info "Set Up SELinux"
-  cp -pr /vagrant/ops/etc/sysconfig/selinux /etc/sysconfig/selinux
+  cp -pr /vagrant/ops/etc/sysconfig/selinux /etc/selinux/config
 
   # Install necessary tools
-  command="yum install -y wget curl vim git unzip"
+  command="apt-get update && apt-get install -y wget vim git unzip"
   info $command && eval $command
-
-  # Repos
-  cp -pr /vagrant/ops/yum.repos.d/* /etc/yum.repos.d/
 }
 
-function install_nfsd() {
+install_nfsd() {
   info "Install NFS"
-  systemctl enable rpcbind
-  systemctl enable nfs-server
+  apt-get install -y nfs-kernel-server nfs-common
 }
 
-function install_nginx() {
+install_nginx() {
   info "Install Nginx"
   yum install -y epel-release
   command="yum install -y nginx"
@@ -44,38 +40,33 @@ function install_nginx() {
   systemctl start nginx
 }
 
-function install_nginx_phpmyadmin() {
+install_nginx_phpmyadmin() {
   mkdir /var/www/tools
   install_phpmyadmin
   ln -s /var/www/tools/phpmyadmin /var/www/html/phpmyadmin
 }
 
-function install_httpd() {
+install_httpd() {
   info "Install Apache"
-  command="yum install -y httpd httpd-devel httpd-tools"
+  command="apt-get install -y apache2"
   info $command && eval $command
 
-  cp -pr /vagrant/ops/httpd/conf/httd.conf /etc/httpd/conf/httpd.conf
-  cp -pr /vagrant/ops/httpd/conf.d/* /etc/httpd/conf.d/
-  systemctl enable httpd
-  systemctl start httpd
-  mkdir /var/www/tools
+  cp -pr /vagrant/ops/apache2/sites-enabled/* /etc/apache2/sites-enabled/
 }
 
-function install_mariadb() {
+install_mariadb() {
   info "Install MariaDB"
-  yum remove -y mariadb-*
-  rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-  command="yum install -y MariaDB-server MariaDB-client"
+  sudo apt-get install software-properties-common
+  sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
+  sudo add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://sgp1.mirrors.digitalocean.com/mariadb/repo/10.1/ubuntu trusty main'
+  command="apt-get update && apt-get install -y mariadb-server"
   info $command && eval $command
-  systemctl enable mariadb
-  systemctl start mariadb
   mysql -e "CREATE USER 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
   mysql -e "GRANT ALL PRIVILEGES ON * . * TO 'root'@'%';"
   mysql -e "FLUSH PRIVILEGES;"
 }
 
-function install_php() {
+install_php() {
   info "Install PHP"
   rpm -Uvh /vagrant/ops/rpm/epel-release-latest-7.noarch.rpm
   rpm -Uvh /vagrant/ops/rpm/webtatic-release.rpm
@@ -85,14 +76,14 @@ function install_php() {
   cp -pr /vagrant/ops/php/php.d/* /etc/php.d/
 }
 
-function install_fpm() {
+install_fpm() {
   install_php
   cp -pr /vagrant/ops/php-fpm.d/* /etc/php-fpm.d/
   systemctl enable php-fpm
   systemctl start php-fpm
 }
 
-function install_phpmyadmin() {
+install_phpmyadmin() {
   info "Install phpMyAdmin"
   curl -SLO https://files.phpmyadmin.net/phpMyAdmin/4.7.0/phpMyAdmin-4.7.0-english.zip
   unzip phpMyAdmin-4.7.0-english.zip
@@ -105,34 +96,24 @@ function install_phpmyadmin() {
   cp -pr /vagrant/ops/phpmyadmin/phpmyadmin.conf /etc/httpd/conf.d/phpmyadmin.conf
 }
 
-function install_composer() {
+install_composer() {
   info "Install Composer"
   curl -SLO https://getcomposer.org/composer.phar
   chmod +x composer.phar
   mv composer.phar /usr/local/bin/composer
 }
 
-function install_node() {
+install_nvm() {
+  info "Install NVM"
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+  source ~/.bashrc
+}
+
+install_node() {
   info "Install NodeJS"
-  curl -SLO https://nodejs.org/dist/v7.9.0/node-v7.9.0-linux-x64.tar.xz
-  tar -xf node-v7.9.0-linux-x64.tar.xz
-  rm -rf node-v7.9.0-linux-x64.tar.xz
-  mv node-v7.9.0-linux-x64 /usr/local/share/node
-  echo 'export PATH=$PATH:/usr/local/share/node/bin' >> /etc/profile
-  export PATH=$PATH:/usr/local/share/node/bin
-}
-
-function install_bower() {
-  export PATH=$PATH:/usr/local/share/node/bin
-  info "Install Bower"
-  command="npm install -g bower"
-  info $command && eval $command
-}
-
-function install_gulp() {
-  export PATH=$PATH:/usr/local/share/node/bin
-  info "Install Gulp"
-  command="npm install -g gulp"
-  info $command && eval $command
+  info "Use Version 6.1.0"
+  nvm install 6.1.0
+  nvm alias default 6.1.0
+  nvm use default
 }
 $*
