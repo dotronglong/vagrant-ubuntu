@@ -111,10 +111,6 @@ install_nvm() {
 install_node() {
   info "Install NodeJS"
   info "Use Version 6.1.0"
-  su vagrant
   nvm install 6.1.0
-  nvm alias default 6.1.0
-  nvm use default
-  exit
 }
 $*
