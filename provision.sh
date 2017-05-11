@@ -59,7 +59,7 @@ install_php() {
   info "Install PHP"
   apt-get install python-software-properties
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
-  command="apt-get update && apt-get install -y php7.1 php7.1-gd php7.1-mcrypt php7.1-intl php7.1-mbstring php7.1-mysql"
+  command="apt-get update && apt-get install -y php7.1 php7.1-gd php7.1-mcrypt php7.1-intl php7.1-mbstring php7.1-mysql php7.1-ldap php7.1-dom php7.1-curl"
   info $command && eval $command
   cp -pr /vagrant/ops/apache2/sites-enabled/* /etc/apache2/sites-enabled/
   cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/apache2/conf.d/
