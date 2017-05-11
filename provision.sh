@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 MYSQL_ROOT_PASSWORD="123456"
 
 say() { echo >&1 -e ":: $*"; }
@@ -46,14 +46,6 @@ install_nginx_phpmyadmin() {
   ln -s /var/www/tools/phpmyadmin /var/www/html/phpmyadmin
 }
 
-install_httpd() {
-  info "Install Apache"
-  command="apt-get install -y apache2"
-  info $command && eval $command
-
-  cp -pr /vagrant/ops/apache2/sites-enabled/* /etc/apache2/sites-enabled/
-}
-
 install_mariadb() {
   info "Install MariaDB"
   sudo apt-get install software-properties-common
@@ -66,11 +58,14 @@ install_mariadb() {
 install_php() {
   info "Install PHP"
   apt-get install python-software-properties
-  LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
-  command="apt-get update && install -y php7.1 php7.1-gd php7.1-mcrypt php7.1-intl php7.1-mbstring php7.1-mysql"
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+  command="apt-get update && apt-get install -y php7.1 php7.1-gd php7.1-mcrypt php7.1-intl php7.1-mbstring php7.1-mysql"
   info $command && eval $command
+  cp -pr /vagrant/ops/apache2/sites-enabled/* /etc/apache2/sites-enabled/
   cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/apache2/conf.d/
   cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/cli/conf.d/
+  mkdir -p /var/www/tools
+  service apache2 restart
 }
 
 install_fpm() {
@@ -93,7 +88,7 @@ install_phpmyadmin() {
   mv phpmyadmin /var/www/tools/phpmyadmin
 
   echo "Alias /phpmyadmin /var/www/tools/phpmyadmin" >> /etc/apache2/conf-enabled/alias.conf
-  cp -pr /vagrant/ops/phpmyadmin/phpmyadmin.conf /etc/httpd/conf.d/phpmyadmin.conf
+  cp -pr /vagrant/ops/phpmyadmin/phpmyadmin.conf /etc/apache2/conf-enabled/phpmyadmin.conf
 }
 
 install_composer() {
@@ -106,6 +101,7 @@ install_composer() {
 install_nvm() {
   info "Install NVM"
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+  chmod +x $HOME/.nvm/nvm.sh
 }
 
 install_node() {
