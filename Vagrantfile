@@ -13,13 +13,17 @@ Vagrant.configure("2") do |config|
     lamp.vm.provision "shell", inline: <<-SHELL
       provision setup
       provision install_nfsd
-      # provision install_httpd
-      provision install_mariadb
-      # provision install_php
-      # provision install_phpmyadmin
-      # provision install_composer
-      # provision install_node
+      provision install_httpd
+      # provision install_mariadb
+      provision install_php
+      provision install_phpmyadmin
+      provision install_composer
       provision info "DONE!!!"
+    SHELL
+
+    lamp.vm.provision "shell", privileged: false, inline: <<-SHELL
+      provision install_nvm
+      provision install_node
     SHELL
   end
 

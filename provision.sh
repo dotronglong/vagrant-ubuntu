@@ -59,28 +59,28 @@ install_mariadb() {
   sudo apt-get install software-properties-common
   sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
   sudo add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://sgp1.mirrors.digitalocean.com/mariadb/repo/10.1/ubuntu trusty main'
-  command="apt-get update && apt-get install -y mariadb-server"
+  command="apt-get install -y mariadb-server"
   info $command && eval $command
-  mysql -e "CREATE USER 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
-  mysql -e "GRANT ALL PRIVILEGES ON * . * TO 'root'@'%';"
-  mysql -e "FLUSH PRIVILEGES;"
 }
 
 install_php() {
   info "Install PHP"
-  rpm -Uvh /vagrant/ops/rpm/epel-release-latest-7.noarch.rpm
-  rpm -Uvh /vagrant/ops/rpm/webtatic-release.rpm
-  command="yum install -y --skip-broken php71w-* mod_php71w"
+  apt-get install python-software-properties
+  LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
+  command="apt-get update && install -y php7.1 php7.1-gd php7.1-mcrypt php7.1-intl php7.1-mbstring php7.1-mysql"
   info $command && eval $command
-  cp -pr /vagrant/ops/php/conf.d/10-php.conf /etc/httpd/conf.modules.d/10-php.conf
-  cp -pr /vagrant/ops/php/php.d/* /etc/php.d/
+  cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/apache2/conf.d/
+  cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/cli/conf.d/
 }
 
 install_fpm() {
   install_php
-  cp -pr /vagrant/ops/php-fpm.d/* /etc/php-fpm.d/
-  systemctl enable php-fpm
-  systemctl start php-fpm
+  command="apt-get install -y php7.1-fpm"
+  info $command && eval $command
+  cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/fpm/conf.d/
+  cp -pr /vagrant/ops/php-fpm.d/* /etc/php/7.1/fpm/pool.d/
+  # a2enmod proxy_fcgi setenvif
+  # a2enconf php7.1-fpm
 }
 
 install_phpmyadmin() {
@@ -92,7 +92,7 @@ install_phpmyadmin() {
   cp -pr /vagrant/ops/phpmyadmin/config.inc.php phpmyadmin/config.inc.php
   mv phpmyadmin /var/www/tools/phpmyadmin
 
-  echo "Alias /phpmyadmin /var/www/tools/phpmyadmin" >> /etc/httpd/conf.d/alias.conf
+  echo "Alias /phpmyadmin /var/www/tools/phpmyadmin" >> /etc/apache2/conf-enabled/alias.conf
   cp -pr /vagrant/ops/phpmyadmin/phpmyadmin.conf /etc/httpd/conf.d/phpmyadmin.conf
 }
 
@@ -106,14 +106,15 @@ install_composer() {
 install_nvm() {
   info "Install NVM"
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
-  source ~/.bashrc
 }
 
 install_node() {
   info "Install NodeJS"
   info "Use Version 6.1.0"
+  su vagrant
   nvm install 6.1.0
   nvm alias default 6.1.0
   nvm use default
+  exit
 }
 $*
