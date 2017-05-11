@@ -65,6 +65,7 @@ install_php() {
   cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/apache2/conf.d/
   cp -pr /vagrant/ops/php/php.d/* /etc/php/7.1/cli/conf.d/
   mkdir -p /var/www/tools
+  a2enmod rewrite
   service apache2 restart
 }
 
