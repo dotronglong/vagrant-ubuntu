@@ -53,6 +53,7 @@ install_mariadb() {
   sudo add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://sgp1.mirrors.digitalocean.com/mariadb/repo/10.1/ubuntu trusty main'
   command="apt-get install -y mariadb-server"
   info $command && eval $command
+  cp -pr /vagrant/ops/mariadb/custom.cnf /etc/mysql/conf.d/
 }
 
 install_php() {
